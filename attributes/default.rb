@@ -61,12 +61,12 @@ default['hopslog']['private_ips']         = ['10.0.2.15']
 default['hopslog']['public_ips']          = ['10.0.2.15']
 
 # Kibana Opendistro Security plugin
-default['kibana']['opendistro_security']['url']   = "#{node['download_url']}/opendistro_security_kibana_plugin-#{node['elastic']['opendistro']['version']}.zip"
-default['kibana']['opendistro_security']['https']['enabled']    = "true"
-default['kibana']['opendistro_security']['ssl']['certificate']  = node["kagent"]["certs"]["elastic_host_certificate"]
-default['kibana']['opendistro_security']['ssl']['key']          = node["kagent"]["certs"]["host_key"]
-default['kibana']['opendistro_security']['multitenancy']['global']['enabled'] = "false"
-default['kibana']['opendistro_security']['multitenancy']['private']['enabled'] = "true"
-default['kibana']['opendistro_security']['cookie']['ttl'] = node['elastic']['opendistro_security']['jwt']['exp_ms'].to_i
-default['kibana']['opendistro_security']['session']['ttl'] = 2 * node['elastic']['opendistro_security']['jwt']['exp_ms'].to_i
-default['kibana']['opendistro_security']['session']['keepalive'] = "true"
+default['kibana']['opendistro_security']['url']                                   = "#{node['download_url']}/opendistro_security_kibana_plugin-#{node['elastic']['opendistro']['version']}.zip"
+default['kibana']['opendistro_security']['https']['enabled']                      = "true"
+default['kibana']['opendistro_security']['ssl']['certificate']                    = node["kagent"]["certs"]["elastic_host_certificate"]
+default['kibana']['opendistro_security']['ssl']['key']                            = node["kagent"]["certs"]["host_key"]
+default['kibana']['opendistro_security']['multitenancy']['global']['enabled']     = "false"
+default['kibana']['opendistro_security']['multitenancy']['private']['enabled']    = "true"
+default['kibana']['opendistro_security']['cookie']['ttl']                         = node['elastic']['opendistro_security']['jwt']['exp_ms'].to_i
+default['kibana']['opendistro_security']['session']['ttl']                        = 2 * node['elastic']['opendistro_security']['jwt']['exp_ms'].to_i
+default['kibana']['opendistro_security']['session']['keepalive']                  = "true"
