@@ -6,20 +6,20 @@ server.port: <%= node['kibana']['port'] %>
 # The default is 'localhost', which usually means remote machines will not be able to connect.
 # To allow connections from remote users, set this parameter to a non-loopback address.
 #server.host: "localhost"
-server.host: "<%= @my_private_ip %>"
+server.host: "0.0.0.0"
 
 # Enables you to specify a path to mount Kibana at if you are running behind a proxy.
 # Use the `server.rewriteBasePath` setting to tell Kibana if it should remove the basePath
 # from requests it receives, and to prevent a deprecation warning at startup.
 # This setting cannot end in a slash.
 #server.basePath: ""
-#server.basePath: "/hopsworks-api/kibana"
+server.basePath: "/hopsworks-api/kibana"
 
 # Specifies whether Kibana should rewrite requests that are prefixed with
 # `server.basePath` or require that they are rewritten by your reverse proxy.
 # This setting was effectively always `false` before Kibana 6.3 and will
 # default to `true` starting in Kibana 7.0.
-#server.rewriteBasePath: false
+server.rewriteBasePath: false
 
 # The maximum payload size in bytes for incoming server requests.
 #server.maxPayloadBytes: 1048576
