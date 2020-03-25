@@ -6,6 +6,7 @@ include_attribute "kagent"
 default['hopslog']['user']                      = node['install']['user'].empty? ? node['elastic']['user'] : node['install']['user']
 default['hopslog']['group']                     = node['install']['user'].empty? ? node['elastic']['group'] : node['install']['user']
 default['hopslog']['dir']                       = node['install']['dir'].empty? ? "/srv" : node['install']['dir']
+default['hopslog']['user-home']                 = "/home/#{node['hopslog']['user']}"
 
 #
 # Logstash

@@ -2,6 +2,8 @@ my_private_ip = my_private_ip()
 
 elastic_addrs = all_elastic_urls_str()
 
+crypto_dir = x509_helper.get_crypto_dir(node['hopslog']['user-home'])
+hops_ca = "#{crypto_dir}/#{x509_helper.get_hops_ca_bundle_name()}"
 template"#{node['logstash']['base_dir']}/config/spark-streaming.conf" do
   source "spark-streaming.conf.erb"
   owner node['hopslog']['user']
@@ -9,7 +11,8 @@ template"#{node['logstash']['base_dir']}/config/spark-streaming.conf" do
   mode 0655
   variables({ 
      :my_private_ip => my_private_ip,
-     :elastic_addr => elastic_addrs
+     :elastic_addr => elastic_addrs,
+     :hops_ca => hops_ca
   })
 end
 
@@ -20,7 +23,8 @@ template"#{node['logstash']['base_dir']}/config/beamjobserver.conf" do
   mode 0655
   variables({
      :my_private_ip => my_private_ip,
-     :elastic_addr => elastic_addrs
+     :elastic_addr => elastic_addrs,
+     :hops_ca => hops_ca
   })
 end
 
@@ -31,7 +35,8 @@ template"#{node['logstash']['base_dir']}/config/beamsdkworker.conf" do
   mode 0655
   variables({
      :my_private_ip => my_private_ip,
-     :elastic_addr => elastic_addrs
+     :elastic_addr => elastic_addrs,
+     :hops_ca => hops_ca
   })
 end
 
@@ -41,7 +46,8 @@ template"#{node['logstash']['base_dir']}/config/tf_serving.conf" do
   group node['hopslog']['group']
   mode 0655
   variables({ 
-     :elastic_addr => elastic_addrs
+     :elastic_addr => elastic_addrs,
+     :hops_ca => hops_ca
   })
 end
 
@@ -51,8 +57,9 @@ template"#{node['logstash']['base_dir']}/config/sklearn_serving.conf" do
   group node['hopslog']['group']
   mode 0655
   variables({
-                :elastic_addr => elastic_addrs
-            })
+      :elastic_addr => elastic_addrs,
+      :hops_ca => hops_ca
+  })
 end
 
 template"#{node['logstash']['base_dir']}/config/kagent.conf" do
@@ -61,7 +68,8 @@ template"#{node['logstash']['base_dir']}/config/kagent.conf" do
   group node['hopslog']['group']
   mode 0655
   variables({ 
-     :elastic_addr => elastic_addrs
+     :elastic_addr => elastic_addrs,
+     :hops_ca => hops_ca
   })
 end
 
