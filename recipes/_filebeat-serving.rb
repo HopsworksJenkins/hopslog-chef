@@ -38,7 +38,7 @@ end
 # TF Serving Configuration
 #
 logstash_fqdn = consul_helper.get_service_fqdn("logstash")
-logstash_tf_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_tf_port']}"
+logstash_tf_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_port']}"
 
 template"#{node['filebeat']['base_dir']}/filebeat-tf-serving.yml" do
   source "filebeat.yml.erb"
@@ -48,6 +48,8 @@ template"#{node['filebeat']['base_dir']}/filebeat-tf-serving.yml" do
   variables({ 
     :paths => tf_log_glob, 
     :multiline => false,
+    :fields => true,
+    :framework => "tensorflow",
     :my_private_ip => my_private_ip,
     :logstash_endpoint => logstash_tf_endpoint,
     :log_name => tf_serving_log_name
@@ -103,11 +105,11 @@ template systemd_tf_script do
   group "root"
   mode 0754
   variables({ 
-     :user => serving_user,
-     :pid => "#{node['filebeat']['pid_dir']}/filebeat-tf-serving.pid",
-     :exec_start => "#{node['filebeat']['base_dir']}/bin/start-filebeat-tf-serving.sh",
-     :exec_stop => "#{node['filebeat']['base_dir']}/bin/stop-filebeat-tf-serving.sh",
-     :deps => deps,
+    :user => serving_user,
+    :pid => "#{node['filebeat']['pid_dir']}/filebeat-tf-serving.pid",
+    :exec_start => "#{node['filebeat']['base_dir']}/bin/start-filebeat-tf-serving.sh",
+    :exec_stop => "#{node['filebeat']['base_dir']}/bin/stop-filebeat-tf-serving.sh",
+    :deps => deps,
   })
   if node['services']['enabled'] == "true"
     notifies :enable, resources(:service => tf_serving_service_name)
@@ -140,8 +142,7 @@ end
 # SkLearn Serving Configuration
 #
 
-logstash_sklearn_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_sklearn_port']}"
-
+logstash_sklearn_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_port']}"
 
 template"#{node['filebeat']['base_dir']}/filebeat-sklearn-serving.yml" do
   source "filebeat.yml.erb"
@@ -149,12 +150,14 @@ template"#{node['filebeat']['base_dir']}/filebeat-sklearn-serving.yml" do
   group serving_group
   mode 0655
   variables({
-                :paths => sk_log_glob,
-                :multiline => false,
-                :my_private_ip => my_private_ip,
-                :logstash_endpoint => logstash_sklearn_endpoint,
-                :log_name => sklearn_serving_log_name
-            })
+    :paths => sk_log_glob,
+    :multiline => false,
+    :fields => true,
+    :framework => "sklearn",
+    :my_private_ip => my_private_ip,
+    :logstash_endpoint => logstash_sklearn_endpoint,
+    :log_name => sklearn_serving_log_name
+  })
 end
 
 template "#{node['filebeat']['base_dir']}/bin/start-filebeat-sklearn-serving.sh" do
@@ -163,9 +166,9 @@ template "#{node['filebeat']['base_dir']}/bin/start-filebeat-sklearn-serving.sh"
   group serving_group
   mode 0750
   variables({
-                :pid => "#{node['filebeat']['pid_dir']}/filebeat-sklearn-serving.pid",
-                :config_file => "filebeat-sklearn-serving.yml"
-            })
+    :pid => "#{node['filebeat']['pid_dir']}/filebeat-sklearn-serving.pid",
+    :config_file => "filebeat-sklearn-serving.yml"
+  })
 end
 
 template"#{node['filebeat']['base_dir']}/bin/stop-filebeat-sklearn-serving.sh" do
@@ -174,9 +177,9 @@ template"#{node['filebeat']['base_dir']}/bin/stop-filebeat-sklearn-serving.sh" d
   group serving_group
   mode 0750
   variables({
-                :pid => "#{node['filebeat']['pid_dir']}/filebeat-sklearn-serving.pid",
-                :user => serving_user
-            })
+    :pid => "#{node['filebeat']['pid_dir']}/filebeat-sklearn-serving.pid",
+    :user => serving_user
+  })
 end
 
 sklearn_serving_service_name="filebeat-sklearn-serving"
