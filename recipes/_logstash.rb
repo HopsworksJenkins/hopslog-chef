@@ -35,6 +35,17 @@ template"#{node['logstash']['base_dir']}/config/beamsdkworker.conf" do
   })
 end
 
+template"#{node['logstash']['base_dir']}/config/serving.conf" do
+  source "serving.conf.erb"
+  owner node['hopslog']['user']
+  group node['hopslog']['group']
+  mode 0655
+  variables({
+     :elastic_addr => elastic_addrs,
+     :hops_ca => hops_ca
+  })
+end
+
 template"#{node['logstash']['base_dir']}/config/tf_serving.conf" do
   source "tf_serving.conf.erb"
   owner node['hopslog']['user']

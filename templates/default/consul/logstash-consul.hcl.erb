@@ -64,6 +64,18 @@ services = [
         }
     },
     {
+        id = "logstash/serving"
+        name = "logstash"
+        tags = [
+            "serving"
+        ]
+        port = <%= node['logstash']['beats']['serving_port']  %>
+        check = {
+            id = "logstash-beats-serving-check"
+            alias_service = "logstash/http"
+        }
+    },
+    {
         id = "logstash/tfserving"
         name = "logstash"
         tags = [
