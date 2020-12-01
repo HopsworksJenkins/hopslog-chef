@@ -1,62 +1,108 @@
+
 input {
   beats {
     port => <%= node['logstash']['beats']['serving_port'] %>
   }
 }
 
+# Ingest serving logs from source [fields][source]:
+# - "local" includes [fields][framework]
+# - "kube" from tool [kubernetes][labels][serving_hops_works/tool]:
+#          - "deployment" includes [kubernetes][labels]
+#          - "kfserving"  includes [kubernetes][labels]
+
 filter {
   mutate {
     add_field => [ "project", "" ]
   }
   mutate {
-    add_field => [ "modelname", "test" ]
+    add_field => [ "model_name", "" ]
   }
 
   # (EE) Kubernetes serving logs
   if [fields][source] == "kube" {
-
-    # parse json log
-    if [message] =~ /^\{.*\}$/ {
-      json {
-        source => "message"
-        target => "log_message" # TODO: remote after testing
-        skip_on_invalid_json => true
-      }
+    mutate {
+      replace => [ "model_name", "%{[kubernetes][labels][serving_hops_works/model-name]}"]
+    }
+    mutate {
+      add_field => [ "model_version", "%{[kubernetes][labels][serving_hops_works/model-version]}" ]
+    }
+    mutate {
+      replace => [ "project", "%{[kubernetes][namespace]}"]
+    }
+    mutate {
+      gsub => [ "project", "[-]", "_" ]
+    }
+    mutate {
+      add_field => [ "serving_id", "%{[kubernetes][labels][serving_hops_works/serving-id]}" ]
+    }
+    mutate {
+      add_field => [ "serving_name", "%{[kubernetes][labels][serving_hops_works/serving-name]}" ]
+    }
+    mutate {
+      add_field => [ "serving_tool", "%{[kubernetes][labels][serving_hops_works/tool]}" ]
+    } 
+    mutate {
+      add_field => [ "framework", "%{[kubernetes][labels][serving_hops_works/framework]}" ]
     }
 
-    # mutate {
-    #   add_field => [ "log_message", "message" ]
-    # }
+    # KFServing
+    if [kubernetes][labels][serving_hops_works/tool] == "kfserving" {
+      grok {
+        match => { "message" => "%{GREEDYDATA:log_message}" }
+      }
 
-    # grok {
-    #   match => {"message" => "%{GREEDYDATA:log_message}"}
-    # }
+    # Kubernetes deployment (docker-images)
+    } else if [kubernetes][labels][serving_hops_works/tool] == "deployment" {
 
-    # TODO: Filter and process messages by framework (kubernetes.labels.framework)
+      # Tensorflow serving
+      if [kubernetes][labels][serving_hops_works/framework] == "tensorflow" {
+        grok {
+          match => { "message" => "%{DATA:serving_info} (?<templogdate>%{YEAR}-%{MONTHNUM2}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}.%{NONNEGINT}): %{WORD:priority} %{DATA:logger_name}] %{GREEDYDATA:log_message}" }
+        }
+        #Ignore failed parse enties. Grok filter has been tested with http://grokconstructor.appspot.com
+        if "_grokparsefailure" in [tags] {
+          drop { }
+        }
+        date {
+          match  => [ "templogdate", ISO8601 ]
+          target => "logdate"
+        }
+      
+      # Sklearn (flask server)
+      } else if [kubernetes][labels][serving_hops_works/framework] == "sklearn" {
+        grok {
+          match => { "message" => "%{GREEDYDATA:log_message}" }
+        }
+
+      # Drop unknown framework
+      } else {
+        drop {}
+      } 
+
+    # Drop unknown serving tool
+    } else {
+      drop {}
+    }
 
   # Local serving logs
   } else if [fields][source] == "local" {
 
     # Message pattern: Tensorflow
     if [fields][framework] == "tensorflow" {
-      mutate {
-        add_field => { "[@metadata][message_pattern]" => "%{DATA:servingInfo} (?<templogdate>%{YEAR}-%{MONTHNUM2}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}.%{NONNEGINT}): %{WORD:priority} %{DATA:logger_name}] %{GREEDYDATA:log_message}" }
+      grok {
+        match => { "message" => "%{DATA:serving_info} (?<templogdate>%{YEAR}-%{MONTHNUM2}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}.%{NONNEGINT}): %{WORD:priority} %{DATA:logger_name}] %{GREEDYDATA:log_message}" }
       }
 
     # Message pattern: Scikit-learn
-    } else if [fields][framework] == "scikit-learn" {
-      mutate {
-        add_field => { "[@metadata][message_pattern]" => "%{DATA:servingInfo} %{GREEDYDATA:log_message}" }
+    } else if [fields][framework] == "sklearn" {
+      grok {
+        match => { "message" => "%{DATA:serving_info} %{GREEDYDATA:log_message}" }
       }
-    } else { 
-      # Drop unknown framework
+
+    # Drop unknown framework
+    } else {
       drop { }
-    }
-
-    # Common local logs
-
-    grok {
-      match => {"message" => "[@metadata][message_pattern]"}
     }
 
     # Ignore failed parse enties. Grok filter has been tested with http://grokconstructor.appspot.com
@@ -71,26 +117,32 @@ filter {
       remove_field => [ "[host]" ]
     }
     mutate {
-      add_field => {
-        "host" => "%{[agent][hostname]}"
-      }
+      add_field => [ "host", "%{[agent][hostname]}" ]
     }
     mutate {
-      split => ["servingInfo", ","]
+      split => ["serving_info", ","]
     }
     mutate {
-      replace => [ "project", "%{[servingInfo][0]}"]
+      replace => [ "project", "%{[serving_info][0]}"]
     }
     mutate {
-      replace => [ "modelname", "%{[servingInfo][1]}"]
-    }
-    mutate {
-      remove_field => [ "message", "source" , "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
+      replace => [ "modelname", "%{[serving_info][1]}"]
     }
 
-  } else { 
-    # Drop unknown serving source
-    drop { }
+  # Drop unknown source
+  } else {
+    drop {}
+  }
+
+  # Common actions
+  mutate {
+    remove_field => [ "[host]", "serving_info" ]
+  }
+  mutate {
+    add_field => [ "host", "%{[agent][hostname]}" ]
+  }
+  mutate {
+    remove_field => [ "message", "service_info", "source", "fields", "kubernetes", "container", "input", "host", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
   }
 }
 
