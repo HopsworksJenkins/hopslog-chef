@@ -55,7 +55,7 @@ filter {
       # Tensorflow serving
       if [kubernetes][labels][serving_hops_works/framework] == "tensorflow" {
         grok {
-          match => { "message" => "%{DATA:serving_info} (?<templogdate>%{YEAR}-%{MONTHNUM2}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}.%{NONNEGINT}): %{WORD:priority} %{DATA:logger_name}] %{GREEDYDATA:log_message}" }
+          match => { "message" => "(?<templogdate>%{YEAR}-%{MONTHNUM2}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}.%{NONNEGINT}): %{WORD:priority} %{DATA:logger_name}] %{GREEDYDATA:log_message}" }
         }
         #Ignore failed parse enties. Grok filter has been tested with http://grokconstructor.appspot.com
         if "_grokparsefailure" in [tags] {
