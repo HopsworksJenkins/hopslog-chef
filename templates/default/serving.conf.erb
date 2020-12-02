@@ -12,11 +12,8 @@ input {
 #          - "kfserving"  includes [kubernetes][labels]
 
 filter {
-  mutate {
-    add_field => [ "project", "" ]
-  }
-  mutate {
-    add_field => [ "model_name", "" ]
+  if [message] =~ /^\s*$/ {
+    drop { }
   }
 
   # (EE) Kubernetes serving logs
@@ -142,7 +139,7 @@ filter {
     add_field => [ "host", "%{[agent][hostname]}" ]
   }
   mutate {
-    remove_field => [ "message", "service_info", "source", "fields", "kubernetes", "container", "input", "host", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
+    remove_field => [ "service_info", "source", "fields", "kubernetes", "container", "input", "host", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
   }
 }
 
