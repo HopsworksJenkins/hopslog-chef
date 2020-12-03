@@ -19,16 +19,19 @@ filter {
   # (EE) Kubernetes serving logs
   if [fields][source] == "kube" {
     mutate {
-      replace => [ "model_name", "%{[kubernetes][labels][serving_hops_works/model-name]}"]
+      add_field => [ "model_name", "%{[kubernetes][labels][serving_hops_works/model-name]}"]
     }
     mutate {
       add_field => [ "model_version", "%{[kubernetes][labels][serving_hops_works/model-version]}" ]
     }
     mutate {
-      replace => [ "project", "%{[kubernetes][namespace]}"]
+      add_field => [ "project_id", "%{[kubernetes][labels][serving_hops_works/project-id]}" ]
     }
     mutate {
-      gsub => [ "project", "[-]", "_" ]
+      add_field => [ "project_name", "%{[kubernetes][namespace]}"]
+    }
+    mutate {
+      gsub => [ "project_name", "[-]", "_" ]
     }
     mutate {
       add_field => [ "serving_id", "%{[kubernetes][labels][serving_hops_works/serving-id]}" ]
@@ -111,19 +114,16 @@ filter {
       target => "logdate"
     }
     mutate {
-      remove_field => [ "[host]" ]
-    }
-    mutate {
-      add_field => [ "host", "%{[agent][hostname]}" ]
-    }
-    mutate {
       split => ["serving_info", ","]
     }
     mutate {
-      replace => [ "project", "%{[serving_info][0]}"]
+      replace => [ "project_name", "%{[serving_info][0]}"]
     }
     mutate {
-      replace => [ "modelname", "%{[serving_info][1]}"]
+      replace => [ "serving_name", "%{[serving_info][1]}"]
+    }
+    mutate {
+      replace => [ "model_name", "%{[serving_info][1]}"]
     }
 
   # Drop unknown source
@@ -133,20 +133,26 @@ filter {
 
   # Common actions
   mutate {
-    remove_field => [ "[host]", "serving_info" ]
+    remove_field => [ "[host]", "serving_info", "message" ]
   }
   mutate {
     add_field => [ "host", "%{[agent][hostname]}" ]
   }
+  if ![log_message] or [log_message] =~ /^\s*$/ {
+    drop { }
+  }
   mutate {
-    remove_field => [ "service_info", "source", "fields", "kubernetes", "container", "input", "host", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
+    add_field => [ "message", "%{[log_message]}" ]
+  }
+  mutate {
+    remove_field => [ "log_message", "service_info", "source", "fields", "kubernetes", "container", "input", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
   }
 }
 
 output {
   elasticsearch {
     hosts => [<%= @elastic_addr %>]
-    index => "%{project}_serving-%{+YYYY.MM.dd}"
+    index => "%{project_name}_serving-%{+YYYY.MM.dd}"
     <% if node['elastic']['opendistro_security']['enabled'] %>
     user => "<%=node['elastic']['opendistro_security']['logstash']['username']%>"
     password => "<%=node['elastic']['opendistro_security']['logstash']['password']%>"

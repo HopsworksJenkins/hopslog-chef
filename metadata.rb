@@ -64,14 +64,6 @@ attribute "logstash/beats/serving_port",
           :description => "Filebeat port for serving logs",
           :type => "string"
 
-attribute "logstash/beats/serving_tf_port",
-          :description => "Filebeat port for serving tf logs",
-          :type => "string"
-
-attribute "logstash/beats/serving_sklearn_port",
-          :description => "Filebeat port for serving sklearn logs",
-          :type => "string"
-
 attribute "logstash/beats/python_jobs_port",
           :description => "Filebeat port for python jobs logs",
           :type => "string"

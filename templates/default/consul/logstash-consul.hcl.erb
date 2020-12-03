@@ -76,30 +76,6 @@ services = [
         }
     },
     {
-        id = "logstash/tfserving"
-        name = "logstash"
-        tags = [
-            "tfserving"
-        ]
-        port = <%= node['logstash']['beats']['serving_tf_port']  %>
-        check = {
-            id = "logstash-beats-tfserving-check"
-            alias_service = "logstash/http"
-        }
-    },
-    {
-        id = "logstash/sklearnserving"
-        name = "logstash"
-        tags = [
-            "sklearnserving"
-        ]
-        port = <%= node['logstash']['beats']['serving_sklearn_port']  %>
-        check = {
-            id = "logstash-beats-sklearnserving-check"
-            alias_service = "logstash/http"
-        }
-    },
-    {
         id = "logstash/pythonjobs"
         name = "logstash"
         tags = [

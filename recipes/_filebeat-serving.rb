@@ -38,7 +38,7 @@ end
 # TF Serving Configuration
 #
 logstash_fqdn = consul_helper.get_service_fqdn("logstash")
-logstash_tf_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_tf_port']}"
+logstash_tf_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_port']}"
 
 template"#{node['filebeat']['base_dir']}/filebeat-tf-serving.yml" do
   source "filebeat.yml.erb"
@@ -142,8 +142,7 @@ end
 # SkLearn Serving Configuration
 #
 
-logstash_sklearn_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_sklearn_port']}"
-
+logstash_sklearn_endpoint = logstash_fqdn + ":#{node['logstash']['beats']['serving_port']}"
 
 template"#{node['filebeat']['base_dir']}/filebeat-sklearn-serving.yml" do
   source "filebeat.yml.erb"
