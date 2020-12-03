@@ -133,7 +133,7 @@ filter {
 
   # Common actions
   mutate {
-    remove_field => [ "[host]", "serving_info", "message" ]
+    remove_field => [ "[host]" ]
   }
   mutate {
     add_field => [ "host", "%{[agent][hostname]}" ]
@@ -142,10 +142,7 @@ filter {
     drop { }
   }
   mutate {
-    add_field => [ "message", "%{[log_message]}" ]
-  }
-  mutate {
-    remove_field => [ "log_message", "service_info", "source", "fields", "kubernetes", "container", "input", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
+    remove_field => [ "message", "service_info", "source", "fields", "kubernetes", "container", "input", "tags", "stream", "templogdate", "prospector", "agent", "jobinfo", "log", "input", "ecs"]
   }
 }
 
