@@ -6,9 +6,9 @@ input {
 }
 
 # Ingest serving logs from source [fields][source]:
-# - "local" includes [fields][framework]
-# - "kube" from tool [kubernetes][labels][serving_hops_works/tool]:
-#          - "deployment" includes [kubernetes][labels]
+# - "local", includes [fields][framework]
+# - "kube", from mode [kubernetes][labels][serving_hops_works/mode]:          
+#          - "elastic"    includes [kubernetes][labels]
 #          - "kfserving"  includes [kubernetes][labels]
 
 filter {
@@ -40,20 +40,20 @@ filter {
       add_field => [ "serving_name", "%{[kubernetes][labels][serving_hops_works/serving-name]}" ]
     }
     mutate {
-      add_field => [ "serving_tool", "%{[kubernetes][labels][serving_hops_works/tool]}" ]
+      add_field => [ "serving_mode", "%{[kubernetes][labels][serving_hops_works/mode]}" ]
     } 
     mutate {
       add_field => [ "framework", "%{[kubernetes][labels][serving_hops_works/framework]}" ]
     }
 
     # KFServing
-    if [kubernetes][labels][serving_hops_works/tool] == "kfserving" {
+    if [kubernetes][labels][serving_hops_works/mode] == "kfserving" {
       grok {
         match => { "message" => "%{GREEDYDATA:log_message}" }
       }
 
-    # Kubernetes deployment (docker-images)
-    } else if [kubernetes][labels][serving_hops_works/tool] == "deployment" {
+    # Kubernetes elastic (docker-images)
+    } else if [kubernetes][labels][serving_hops_works/mode] == "elastic" {
 
       # Tensorflow serving
       if [kubernetes][labels][serving_hops_works/framework] == "tensorflow" {
@@ -80,7 +80,7 @@ filter {
         drop {}
       } 
 
-    # Drop unknown serving tool
+    # Drop unknown serving mode
     } else {
       drop {}
     }
