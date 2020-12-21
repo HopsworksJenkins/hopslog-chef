@@ -49,7 +49,7 @@ template"#{node['filebeat']['base_dir']}/filebeat-tf-serving.yml" do
     :paths => tf_log_glob, 
     :multiline => false,
     :fields => true,
-    :framework => "tensorflow",
+    :model_server => "tensorflow_serving",
     :my_private_ip => my_private_ip,
     :logstash_endpoint => logstash_tf_endpoint,
     :log_name => tf_serving_log_name
@@ -153,7 +153,7 @@ template"#{node['filebeat']['base_dir']}/filebeat-sklearn-serving.yml" do
     :paths => sk_log_glob,
     :multiline => false,
     :fields => true,
-    :framework => "sklearn",
+    :model_server => "flask",
     :my_private_ip => my_private_ip,
     :logstash_endpoint => logstash_sklearn_endpoint,
     :log_name => sklearn_serving_log_name
